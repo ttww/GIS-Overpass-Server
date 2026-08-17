@@ -254,7 +254,7 @@ render_compose() {
       OVERPASS_STOP_AFTER_INIT: "false"
       OVERPASS_PLANET_PREPROCESS: "mv /db/planet.osm.bz2 /db/planet.osm.pbf && osmium cat -o /db/planet.osm.bz2 /db/planet.osm.pbf && rm -f /db/planet.osm.pbf"
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf --noproxy '*' 'http://localhost/api/interpreter?data=[out:json];node(1);out;' | grep -q version"]
+      test: ["CMD-SHELL", "curl -sfg --noproxy '*' 'http://localhost/api/interpreter?data=[out:json];node(1);out;' | grep -q version"]
       interval: 60s
       timeout: 15s
       start_period: 48h

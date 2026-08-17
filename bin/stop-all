@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+# shellcheck source=../lib/common.sh
+. "${SCRIPT_DIR}/../lib/common.sh"
+
+check_prereqs
+
+if [ -z "$(list_installed_countries)" ]; then
+  log "No countries installed yet."
+  exit 0
+fi
+
+log "Stopping all installed countries..."
+(cd "$ROOT_DIR" && docker compose stop)

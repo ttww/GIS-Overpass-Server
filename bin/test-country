@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+# shellcheck source=../lib/common.sh
+. "${SCRIPT_DIR}/../lib/common.sh"
+
+COUNTRY="${1:-}"
+require_country_arg "$COUNTRY"
+check_prereqs
+require_installed_country "$COUNTRY"
+
+load_instance_env "$COUNTRY"
+
+log "Testing overpass-${COUNTRY} at localhost:${PORT}..."
+log ""
+
+RESPONSE_FILE=$(mktemp)
+trap 'rm -f "$RESPONSE_FILE"' EXIT
+
+HTTP_CODE=$(curl -s -o "$RESPONSE_FILE" -w '%{http_code}' \
+  --max-time 15 \
+  --data-urlencode 'data=[out:json][timeout:10];node(1);out;' \
+  "http://localhost:${PORT}/api/interpreter" || true)
+
+log "HTTP: ${HTTP_CODE}"
+
+if [ "$HTTP_CODE" = "200" ] && grep -q '"version"' "$RESPONSE_FILE" 2>/dev/null; then
+  log "Overpass API: OK"
+  exit 0
+else
+  error "Overpass API: FAIL"
+  exit 1
+fi

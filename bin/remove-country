@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+# shellcheck source=../lib/common.sh
+. "${SCRIPT_DIR}/../lib/common.sh"
+
+COUNTRY="${1:-}"
+require_country_arg "$COUNTRY"
+check_prereqs
+require_installed_country "$COUNTRY"
+
+INSTANCE_DIR="$(instance_dir "$COUNTRY")"
+DB_DIR="${INSTANCE_DIR}/db"
+DB_SIZE=$(dir_size_human "$DB_DIR")
+
+log "This will remove:"
+log ""
+log "Container: overpass-${COUNTRY}"
+log "Database:  ${INSTANCE_DIR} (${DB_SIZE:-unknown size})"
+log ""
+
+printf 'Type "%s" to confirm: ' "$COUNTRY"
+read -r reply
+if [ "$reply" != "$COUNTRY" ]; then
+  die "Confirmation did not match. Aborted, nothing was removed."
+fi
+
+log "Removing overpass-${COUNTRY}..."
+(cd "$ROOT_DIR" && docker compose rm -sf "overpass-${COUNTRY}") || true
+
+rm -f "$(instance_env_path "$COUNTRY")"
+render_compose
+
+rm -rf "$INSTANCE_DIR"
+
+log "Country '${COUNTRY}' removed."

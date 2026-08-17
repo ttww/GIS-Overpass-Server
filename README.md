@@ -1,12 +1,12 @@
 # GIS-Overpass-Server
 
-Docker-basiertes Setup zum Betrieb mehrerer eigener [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API)-Instanzen — eine pro Land, mit eigener Datenbank, eigenem Port und eigenem Geofabrik-Update-Feed. Basiert auf dem Image [`wiktorn/overpass-api`](https://github.com/wiktorn/Overpass-API).
+Docker-based setup for running multiple self-hosted [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API) instances — one per country, each with its own database, its own port, and its own Geofabrik update feed. Built on the [`wiktorn/overpass-api`](https://github.com/wiktorn/Overpass-API) image.
 
-## Voraussetzungen
+## Requirements
 
-- `docker` mit Docker Compose v2 (`docker compose ...`)
+- `docker` with Docker Compose v2 (`docker compose ...`)
 - `curl`
-- genug freier Speicherplatz (siehe [Speicherverbrauch](#speicherverbrauch))
+- enough free disk space (see [Disk usage](#disk-usage))
 
 ## Installation
 
@@ -15,24 +15,24 @@ git clone <repo-url>
 cd GIS-Overpass-Server
 ```
 
-Es muss nichts weiter installiert werden — alle Befehle liegen unter `bin/`.
+Nothing else needs to be installed — all commands live under `bin/`.
 
-## Land installieren
+## Installing a country
 
 ```bash
 ./bin/setup-country italy
 ```
 
-Lädt die PBF-Datei von Geofabrik herunter, initialisiert die Overpass-Datenbank, startet den Container und wartet, bis die API antwortet. Der Download ist unterbrechbar — bei einem Abbruch (z. B. Verbindungsproblemen) einfach denselben Befehl erneut ausführen, er setzt fort statt neu zu beginnen (siehe [Deviations](#deviations-from-the-original-technical-proposal)).
+Downloads the PBF file from Geofabrik, initializes the Overpass database, starts the container, and waits until the API responds. The download is resumable — if it's interrupted (e.g. by connection problems), just run the same command again; it continues instead of starting over (see [Deviations](#deviations-from-the-original-technical-proposal)).
 
-Optionen:
+Options:
 
 ```bash
-./bin/setup-country italy --keep-pbf   # Quell-PBF nach dem Import behalten
-./bin/setup-country italy --yes        # Speicherplatz-Warnung ohne Rückfrage bestätigen
+./bin/setup-country italy --keep-pbf   # keep the source PBF after import
+./bin/setup-country italy --yes        # confirm the disk-space warning without prompting
 ```
 
-Verfügbare Länder stehen in [`config/countries.conf`](config/countries.conf); weitere lassen sich durch eine zusätzliche Zeile hinzufügen (siehe Kommentar dort).
+Available countries live in [`config/countries.conf`](config/countries.conf); more can be added with a single extra line (see the comment in that file).
 
 ## Status
 
@@ -47,9 +47,9 @@ italy              18001   overpass-italy           Up 3 hours (healthy)        
 germany             18002   overpass-germany         Exited (0) 12 minutes ago      37G
 ```
 
-## Starten / Stoppen / Neustarten
+## Start / stop / restart
 
-Einzelnes Land:
+Single country:
 
 ```bash
 ./bin/start-country italy
@@ -57,7 +57,7 @@ Einzelnes Land:
 ./bin/restart-country italy
 ```
 
-Alle installierten Länder:
+All installed countries:
 
 ```bash
 ./bin/start-all
@@ -65,7 +65,7 @@ Alle installierten Länder:
 ./bin/restart-all
 ```
 
-Gestoppte Container verlieren ihre Datenbank nicht — die Daten liegen persistent unter `./data/<land>/db`.
+A stopped container never loses its database — data persists under `./data/<country>/db`.
 
 ## Logs
 
@@ -73,7 +73,7 @@ Gestoppte Container verlieren ihre Datenbank nicht — die Daten liegen persiste
 ./bin/logs italy
 ```
 
-## Testen
+## Testing
 
 ```bash
 ./bin/test-country italy
@@ -86,15 +86,15 @@ HTTP: 200
 Overpass API: OK
 ```
 
-## Entfernen
+## Removing
 
 ```bash
 ./bin/remove-country italy
 ```
 
-Zeigt Container- und Datenbankgröße an und verlangt die exakte Eingabe des Ländernamens zur Bestätigung. Ohne korrekte Bestätigung wird nichts gelöscht.
+Shows the container and database size and requires typing the exact country name to confirm. Without correct confirmation, nothing is deleted.
 
-## Overpass-Query ausführen
+## Running an Overpass query
 
 ```bash
 curl \
@@ -102,67 +102,67 @@ curl \
   http://localhost:18001/api/interpreter
 ```
 
-## Architektur
+## Architecture
 
-Jedes Land bekommt einen eigenen, vollständig unabhängigen Container samt Datenbank, Port und Update-Stream:
+Each country gets its own, fully independent container with its own database, port, and update stream:
 
 ```text
-italy   → overpass-italy   → ./data/italy/db    → Port 18001 → italy-updates/
-germany → overpass-germany → ./data/germany/db  → Port 18002 → germany-updates/
+italy   → overpass-italy   → ./data/italy/db    → port 18001 → italy-updates/
+germany → overpass-germany → ./data/germany/db  → port 18002 → germany-updates/
 ```
 
-Es gibt **keine statische `docker-compose.yml` pro Land**. Stattdessen wird eine einzige `docker-compose.yml` im Projektwurzelverzeichnis von `lib/common.sh` (Funktion `render_compose`) **automatisch neu generiert**, sobald ein Land hinzugefügt oder entfernt wird. Grundlage dafür ist ausschließlich `data/<land>/instance.env` — diese Datei ist die einzige Zustandsquelle für "welche Länder sind installiert, mit welchem Port". `docker-compose.yml` wird deshalb nicht versioniert (`.gitignore`) und darf nicht von Hand editiert werden.
+There is **no static `docker-compose.yml` per country**. Instead, a single `docker-compose.yml` at the project root is **automatically regenerated** by `lib/common.sh` (function `render_compose`) whenever a country is added or removed. It is built purely from `data/<country>/instance.env` — that file is the single source of truth for "which countries are installed, on which port". `docker-compose.yml` is therefore not version-controlled (`.gitignore`) and should never be hand-edited.
 
-### Verzeichnisstruktur
+### Directory structure
 
 ```text
 GIS-Overpass-Server/
-├── docker-compose.yml       # auto-generiert, nicht von Hand editieren
+├── docker-compose.yml       # auto-generated, do not edit by hand
 ├── config/
-│   └── countries.conf       # Katalog: land|pbf_url|diff_url
+│   └── countries.conf       # catalog: country|pbf_url|diff_url
 ├── lib/
-│   └── common.sh            # gemeinsame Funktionen aller bin/*-Skripte
+│   └── common.sh            # shared functions used by all bin/* scripts
 ├── bin/                      # setup-country, status, logs, ...
 └── data/
-    └── <land>/
-        ├── instance.env      # Port, URLs, Zeitstempel (unser State)
-        └── db/                # persistente Overpass-Datenbank (Bind-Mount von /db)
+    └── <country>/
+        ├── instance.env      # port, URLs, timestamp (our state)
+        └── db/                # persistent Overpass database (bind-mounted /db)
 ```
 
 ### Ports
 
-Ports werden automatisch vergeben, beginnend bei `18001`, aufsteigend, unter Vermeidung bereits belegter Ports (sowohl unserer eigenen Installationen als auch fremder Prozesse auf dem Host). Die API ist standardmäßig auf **allen Interfaces** erreichbar (`0.0.0.0:<port>`), damit sie auch aus dem LAN nutzbar ist:
+Ports are assigned automatically, starting at `18001` and counting up, avoiding ports already in use (both by our own installations and by other processes on the host). The API is reachable on **all interfaces** by default (`0.0.0.0:<port>`), so it can also be used from the LAN:
 
 ```text
 http://HOST:18001/api/interpreter
 ```
 
-> **Sicherheitshinweis:** Es ist **keine Authentifizierung** eingebaut. Die Ports dürfen deshalb **nicht ungeschützt ins Internet veröffentlicht werden** (kein Port-Forwarding, keine öffentliche Firewall-Freigabe) — nur im vertrauenswürdigen LAN bzw. hinter einem eigenen Reverse Proxy mit Auth verwenden.
+> **Security note:** There is **no authentication** built in. The ports must therefore **never be exposed unprotected to the internet** (no port forwarding, no public firewall rule) — only use this on a trusted LAN or behind your own reverse proxy with authentication.
 
 ## Updates
 
-Nach dem initialen Import hält sich jede Instanz automatisch über den in `config/countries.conf` hinterlegten Geofabrik-Replication-Feed (`<land>-updates/`) aktuell — das ist die eingebaute Update-Mechanik von `wiktorn/overpass-api` (`OVERPASS_DIFF_URL` + `OVERPASS_UPDATE_SLEEP`, hier auf täglich gestellt), keine selbstgebaute Lösung. Jedes Land hat dabei seinen eigenen, unabhängigen Replication-State innerhalb seiner eigenen `/db`.
+After the initial import, each instance keeps itself up to date automatically via the Geofabrik replication feed configured in `config/countries.conf` (`<country>-updates/`) — this is the built-in update mechanism of `wiktorn/overpass-api` (`OVERPASS_DIFF_URL` + `OVERPASS_UPDATE_SLEEP`, set to daily here), not a custom-built solution. Each country has its own, independent replication state inside its own `/db`.
 
 ```text
-italy   → italy-updates/   → overpass-italy   (eigener Replication-State)
-germany → germany-updates/ → overpass-germany (eigener Replication-State)
+italy   → italy-updates/   → overpass-italy   (own replication state)
+germany → germany-updates/ → overpass-germany (own replication state)
 ```
 
-## Speicherverbrauch
+## Disk usage
 
-- Vor jedem `setup-country` wird der freie Speicherplatz per `df` geprüft; bei offensichtlich wenig freiem Platz (Standard: < 20 GB, überschreibbar über `MIN_FREE_GB`) erscheint eine Warnung mit Rückfrage. Es wird bewusst **keine** exakte Vorhersage der fertigen Datenbankgröße versucht.
-- Die heruntergeladene Quell-PBF wird nach erfolgreichem Aufbau der Datenbank standardmäßig gelöscht. Mit `--keep-pbf` bleibt sie unter `data/<land>/db/source.osm.pbf` erhalten.
-- Während der Initialisierung entsteht kurzzeitig eine zusätzliche Kopie der PBF-Daten im Container (siehe unten) — das ist vorübergehend und wird automatisch aufgeräumt.
+- Before every `setup-country`, free disk space is checked via `df`; if it's clearly low (default: < 20 GB, overridable via `MIN_FREE_GB`), a warning with a confirmation prompt appears. No attempt is made to precisely predict the final database size.
+- The downloaded source PBF is deleted by default once the database has been built successfully. With `--keep-pbf` it is kept at `data/<country>/db/source.osm.pbf`.
+- A short-lived extra copy of the PBF data is created inside the container during initialization (see below) — this is temporary and cleaned up automatically.
 
 ## Deviations from the original technical proposal
 
-Diese drei Punkte weichen bewusst von der ursprünglichen Anfrage ab, basierend auf der aktuellen Dokumentation von `wiktorn/overpass-api` und den tatsächlichen Netzwerkbedingungen:
+These three points deliberately deviate from the original request, based on the current documentation of `wiktorn/overpass-api` and the actual network conditions:
 
-1. **Resumable Download auf dem Host statt im Container.** Das Image lädt `OVERPASS_PLANET_URL` selbst herunter — aber mit einem einzelnen, nicht fortsetzbaren `curl -L -o` (kein `-C -`). Auf einer langsamen oder instabilen Leitung würde ein Verbindungsabbruch bei großen Ländern (mehrere GB) den kompletten Download zunichtemachen. Stattdessen lädt `bin/setup-country` die PBF-Datei selbst mit `curl -C - --retry` auf den Host herunter (`data/<land>/db/source.osm.pbf`) und übergibt dem Container eine `file://`-URL. Ein Abbruch lässt sich durch einfaches erneutes Ausführen von `setup-country` fortsetzen. Dadurch entsteht während der Initialisierung kurzzeitig eine zweite Kopie der Datei im Container (`osmium`-Konvertierung), die danach automatisch gelöscht wird.
-2. **`OVERPASS_STOP_AFTER_INIT=false`.** Der Default des Images (`true`) lässt den Container nach der Initialisierung beenden und verlässt sich auf `restart: unless-stopped`, um danach in den Serve-Modus überzugehen. Für einen einzigen, klar nachvollziehbaren Lebenszyklus (inkl. Fortschrittsanzeige über den Docker-Healthcheck) wird das hier explizit deaktiviert.
-3. **Geofabrik-eigene `-updates/`-Feeds statt des openstreetmap.fr-Mirrors** aus dem Beispiel in der Overpass-API-Dokumentation, da die Aufgabenstellung explizit einen Geofabrik-Replication-Feed vorsieht.
+1. **Resumable download on the host instead of inside the container.** The image downloads `OVERPASS_PLANET_URL` itself — but with a single, non-resumable `curl -L -o` (no `-C -`). On a slow or unstable connection, a dropped connection during a large country (several GB) would waste the entire download. Instead, `bin/setup-country` downloads the PBF file itself with `curl -C - --retry` onto the host (`data/<country>/db/source.osm.pbf`) and hands the container a `file://` URL. An interruption can be resumed by simply re-running `setup-country`. This creates a short-lived second copy of the file inside the container during initialization (`osmium` conversion), which is deleted automatically afterwards.
+2. **`OVERPASS_STOP_AFTER_INIT=false`.** The image's default (`true`) makes the container exit after initialization and relies on `restart: unless-stopped` to bring it back up into serving mode. For a single, easy-to-follow lifecycle (including progress tracking via the Docker healthcheck), this is explicitly disabled here.
+3. **Geofabrik's own `-updates/` feeds instead of the openstreetmap.fr mirror** shown in the Overpass API documentation's example, since the task explicitly calls for a Geofabrik replication feed.
 
-## Beispiel-Workflow
+## Example workflow
 
 ```bash
 ./bin/setup-country italy

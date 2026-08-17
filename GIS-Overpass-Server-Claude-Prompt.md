@@ -1,12 +1,12 @@
-# Aufgabe: Multi-Country Overpass GIS Server
+# Task: Multi-Country Overpass GIS Server
 
-Erstelle in diesem **leeren Projektordner `GIS-Overpass-Server`** ein vollständiges Docker-basiertes Setup zum Betrieb eigener Overpass-API-Instanzen.
+Create a complete Docker-based setup for running self-hosted Overpass API instances in this **empty project folder `GIS-Overpass-Server`**.
 
-## Ziel
+## Goal
 
-Für jedes installierte Land soll eine **eigene Overpass-API-Instanz** mit eigener Datenbank laufen.
+Each installed country should run its **own Overpass API instance** with its own database.
 
-Beispiel:
+Example:
 
 ```text
 GIS-Overpass-Server/
@@ -28,28 +28,28 @@ GIS-Overpass-Server/
 └── README.md
 ```
 
-Die genaue Struktur darf verbessert werden, wenn es technisch sinnvoller ist.
+The exact structure may be improved if technically sensible.
 
 ---
 
-## Grundarchitektur
+## Base architecture
 
-Verwende Docker Compose und das Image:
+Use Docker Compose and the image:
 
 ```text
 wiktorn/overpass-api
 ```
 
-Jedes Land erhält:
+Each country gets:
 
-- eigenen Docker-Container
-- eigene Overpass-Datenbank
-- eigenes persistentes Datenverzeichnis
-- eigenen Port
-- eigenen Geofabrik-PBF-Download
-- eigenen Geofabrik-Replication/Update-Feed
+- its own Docker container
+- its own Overpass database
+- its own persistent data directory
+- its own port
+- its own Geofabrik PBF download
+- its own Geofabrik replication/update feed
 
-Beispiel:
+Example:
 
 ```text
 Germany
@@ -63,15 +63,15 @@ Italy
   Port:      18002
 ```
 
-Die Ports sollen automatisch verwaltet werden.
+Ports should be managed automatically.
 
 ---
 
-# Wichtig: keine statische Compose-Datei pro Land
+# Important: no static compose file per country
 
-Die Länder sollen dynamisch verwaltet werden können.
+Countries should be manageable dynamically.
 
-Ich möchte beispielsweise:
+For example, I want to be able to run:
 
 ```bash
 ./bin/setup-country italy
@@ -79,15 +79,13 @@ Ich möchte beispielsweise:
 ./bin/setup-country czech-republic
 ```
 
-ausführen können.
-
-Danach:
+Afterwards:
 
 ```bash
 ./bin/status
 ```
 
-z. B.:
+e.g.:
 
 ```text
 COUNTRY          PORT    STATUS       DB SIZE
@@ -97,38 +95,38 @@ germany          18002   stopped      37.2 GB
 czech-republic   18003   running       8.1 GB
 ```
 
-Entwirf dafür eine robuste, aber möglichst einfache Lösung.
+Design a robust yet as-simple-as-possible solution for this.
 
-Falls Docker Compose Profiles, dynamisch generierte Compose-Dateien oder ein anderes Compose-Konzept dafür sinnvoll sind, entscheide dich für die wartbarste Lösung.
+If Docker Compose profiles, dynamically generated compose files, or another Compose concept make sense for this, choose whichever solution is most maintainable.
 
-**Keine Kubernetes-Lösung.**
+**No Kubernetes solution.**
 
 ---
 
-# Länder-Konfiguration
+# Country configuration
 
-Die Konfiguration soll deklarativ sein.
+The configuration should be declarative.
 
-Beispielsweise:
+For example:
 
 ```text
 config/countries.conf
 ```
 
-oder YAML/JSON, falls sinnvoller.
+or YAML/JSON, if that makes more sense.
 
-Darin sollen mindestens stehen:
+It should contain at least:
 
 ```text
 country
 Geofabrik PBF URL
-Geofabrik Update URL
+Geofabrik update URL
 Port
 ```
 
-Die Geofabrik-URLs sollen nicht unnötig hart im Code verteilt sein.
+The Geofabrik URLs should not be unnecessarily hardcoded and scattered throughout the code.
 
-Beispiele:
+Examples:
 
 ```text
 italy
@@ -139,33 +137,33 @@ czech-republic
 france
 ```
 
-Es muss aber einfach möglich sein, weitere Geofabrik-Regionen hinzuzufügen.
+However, it must be easy to add further Geofabrik regions.
 
 ---
 
 # setup-country
 
-Der wichtigste Befehl:
+The most important command:
 
 ```bash
 ./bin/setup-country italy
 ```
 
-Er soll:
+It should:
 
-1. prüfen, ob das Land bekannt ist
-2. prüfen, ob es bereits installiert ist
-3. benötigte Verzeichnisse erzeugen
-4. freien bzw. konfigurierten Port bestimmen
-5. PBF von Geofabrik herunterladen
-6. notwendige Konvertierung für Overpass durchführen
-7. Overpass-Datenbank initialisieren
-8. Update/Replication-Konfiguration einrichten
-9. Container starten
-10. auf erfolgreiche Initialisierung warten bzw. verständlich den Fortschritt anzeigen
-11. am Ende Endpoint und Status ausgeben
+1. check whether the country is known
+2. check whether it is already installed
+3. create the required directories
+4. determine a free/configured port
+5. download the PBF from Geofabrik
+6. perform the necessary conversion for Overpass
+7. initialize the Overpass database
+8. set up the update/replication configuration
+9. start the container
+10. wait for successful initialization, or show progress in an understandable way
+11. print the endpoint and status at the end
 
-Beispiel:
+Example:
 
 ```text
 Setting up Italy...
@@ -190,15 +188,15 @@ Database size:
 18.4 GB
 ```
 
-Der Prozess muss auch bei großen Ländern robust sein.
+The process must also be robust for large countries.
 
-Downloads sollten möglichst wiederaufnehmbar sein (`curl -C -` o. ä.).
+Downloads should be resumable where possible (`curl -C -` or similar).
 
 ---
 
-# Start / Stop
+# Start / stop
 
-Einzelne Länder:
+Individual countries:
 
 ```bash
 ./bin/start-country italy
@@ -206,7 +204,7 @@ Einzelne Länder:
 ./bin/restart-country italy
 ```
 
-Alle installierten Länder:
+All installed countries:
 
 ```bash
 ./bin/start-all
@@ -214,7 +212,7 @@ Alle installierten Länder:
 ./bin/restart-all
 ```
 
-Ein gestoppter Server darf natürlich seine Datenbank nicht verlieren.
+A stopped server must of course not lose its database.
 
 ---
 
@@ -224,7 +222,7 @@ Ein gestoppter Server darf natürlich seine Datenbank nicht verlieren.
 ./bin/status
 ```
 
-soll mindestens anzeigen:
+should show at least:
 
 ```text
 COUNTRY          PORT    CONTAINER              STATUS       DISK
@@ -233,23 +231,23 @@ italy            18001   overpass-italy         running      18G
 germany          18002   overpass-germany       stopped      39G
 ```
 
-Optional zusätzlich:
+Optionally in addition:
 
 - Health
-- Zeitpunkt des letzten Updates
-- Container-Uptime
+- Time of last update
+- Container uptime
 
 ---
 
 # Logs
 
-Unterstütze:
+Support:
 
 ```bash
 ./bin/logs italy
 ```
 
-entsprechend ungefähr:
+roughly corresponding to:
 
 ```bash
 docker logs -f overpass-italy
@@ -257,15 +255,15 @@ docker logs -f overpass-italy
 
 ---
 
-# Entfernen
+# Removal
 
 ```bash
 ./bin/remove-country italy
 ```
 
-Dabei muss ausdrücklich darauf hingewiesen werden, dass die Overpass-Datenbank gelöscht wird.
+This must explicitly warn that the Overpass database will be deleted.
 
-Beispiel:
+Example:
 
 ```text
 This will remove:
@@ -276,17 +274,17 @@ Database:  ./data/italy (18.4 GB)
 Type "italy" to confirm:
 ```
 
-Ohne korrekte Bestätigung darf nichts gelöscht werden.
+Without correct confirmation, nothing may be deleted.
 
 ---
 
 # Updates
 
-Die Overpass-Instanzen sollen nach dem initialen Import automatisch mit den entsprechenden Geofabrik-Diffs aktuell gehalten werden.
+After the initial import, the Overpass instances should be kept up to date automatically using the corresponding Geofabrik diffs.
 
-Jedes Land muss seinen eigenen Replication-State besitzen.
+Each country must have its own replication state.
 
-Beispiel:
+Example:
 
 ```text
 Italy
@@ -302,21 +300,21 @@ germany-updates
 overpass-germany
 ```
 
-Überprüfe anhand der aktuellen Dokumentation von `wiktorn/overpass-api`, wie `OVERPASS_DIFF_URL`, Update-Intervalle und Replication-State korrekt konfiguriert werden.
+Check the current documentation of `wiktorn/overpass-api` for how `OVERPASS_DIFF_URL`, update intervals, and replication state are correctly configured.
 
-Keine selbst erfundene Update-Mechanik verwenden, wenn das Image dies bereits unterstützt.
+Do not invent your own update mechanism if the image already supports this.
 
 ---
 
 # Docker
 
-Container-Namen:
+Container names:
 
 ```text
 overpass-<country>
 ```
 
-Beispiele:
+Examples:
 
 ```text
 overpass-italy
@@ -324,69 +322,67 @@ overpass-germany
 overpass-czech-republic
 ```
 
-Persistente Daten:
+Persistent data:
 
 ```text
 ./data/<country>/
 ```
 
-Container sollen:
+Containers should use:
 
 ```yaml
 restart: unless-stopped
 ```
 
-verwenden.
-
-API-Port intern:
+Internal API port:
 
 ```text
 80
 ```
 
-Host-Ports beispielsweise ab:
+Host ports, for example starting at:
 
 ```text
 18001
 ```
 
-Ports dürfen nicht kollidieren.
+Ports must not collide.
 
 ---
 
-# Netzwerkzugriff
+# Network access
 
-Standardmäßig soll die API auf allen Interfaces des Docker-Hosts erreichbar sein:
+By default, the API should be reachable on all interfaces of the Docker host:
 
 ```text
 0.0.0.0:18001
 ```
 
-Damit kann sie auch aus dem LAN benutzt werden.
+This allows it to also be used from the LAN.
 
-Dokumentiere den entsprechenden Endpoint:
+Document the corresponding endpoint:
 
 ```text
 http://HOST:18001/api/interpreter
 ```
 
-Es soll **keine Authentifizierung** eingebaut werden.
+**No authentication** should be built in.
 
-Im README deutlich darauf hinweisen, dass die Ports deshalb **nicht ungeschützt ins Internet veröffentlicht werden sollten**.
+Clearly point out in the README that the ports should therefore **not be exposed unprotected to the internet**.
 
 ---
 
 # Test
 
-Erstelle:
+Create:
 
 ```bash
 ./bin/test-country italy
 ```
 
-Der Test soll eine kleine Overpass-Abfrage gegen die entsprechende Instanz senden.
+The test should send a small Overpass query against the corresponding instance.
 
-Zum Beispiel eine ungefährliche kleine Query wie:
+For example a harmless small query like:
 
 ```overpass
 [out:json][timeout:10];
@@ -394,9 +390,9 @@ node(1);
 out;
 ```
 
-oder eine andere Query, die zuverlässig überprüft, ob `/api/interpreter` korrekt arbeitet.
+or another query that reliably verifies that `/api/interpreter` works correctly.
 
-Erwartetes Verhalten:
+Expected behavior:
 
 ```text
 Testing overpass-italy at localhost:18001...
@@ -407,17 +403,17 @@ Overpass API: OK
 
 ---
 
-# Fehlerbehandlung
+# Error handling
 
-Alle Scripts sollen:
+All scripts should use:
 
 ```bash
 set -euo pipefail
 ```
 
-oder eine entsprechend robuste Fehlerbehandlung verwenden.
+or equally robust error handling.
 
-Prüfe Voraussetzungen wie:
+Check prerequisites such as:
 
 ```text
 docker
@@ -425,9 +421,9 @@ docker compose
 curl
 ```
 
-und liefere verständliche Fehlermeldungen.
+and provide understandable error messages.
 
-Beispiele:
+Examples:
 
 ```text
 ERROR: Docker is not installed.
@@ -438,11 +434,11 @@ ERROR: Country 'italy' is already installed.
 
 ---
 
-# PBF-Dateien
+# PBF files
 
-Vermeide unnötigen SSD-Verbrauch.
+Avoid unnecessary SSD wear.
 
-Wenn die heruntergeladene `.osm.pbf` nach erfolgreichem Aufbau der Overpass-Datenbank nicht mehr benötigt wird, soll sie standardmäßig gelöscht werden.
+If the downloaded `.osm.pbf` is no longer needed after the Overpass database has been built successfully, it should be deleted by default.
 
 Optional:
 
@@ -450,49 +446,49 @@ Optional:
 ./bin/setup-country italy --keep-pbf
 ```
 
-damit die Quelldatei erhalten bleibt.
+to keep the source file.
 
-Temporäre Konvertierungsdateien ebenfalls nach erfolgreichem Import entfernen.
+Also remove temporary conversion files after a successful import.
 
 ---
 
-# Speicherplatzprüfung
+# Disk space check
 
-Vor dem Import soll möglichst abgeschätzt bzw. geprüft werden, ob genügend freier Speicherplatz vorhanden ist.
+Before the import, it should be estimated/checked whether there is enough free disk space.
 
-Mindestens:
+At minimum, evaluate:
 
 ```bash
 df
 ```
 
-auswerten und freien Speicher anzeigen.
+and show free space.
 
-Nicht versuchen, eine vermeintlich exakte Größe der fertigen Overpass-Datenbank vorherzusagen.
+Do not try to predict an allegedly exact size of the finished Overpass database.
 
-Bei offensichtlich wenig freiem Speicher eine deutliche Warnung ausgeben.
+Print a clear warning if there is obviously little free space.
 
 ---
 
-# Idempotenz
+# Idempotency
 
-Scripts dürfen bestehende Installationen nicht versehentlich zerstören.
+Scripts must not accidentally destroy existing installations.
 
-Insbesondere:
+In particular:
 
 ```bash
 ./bin/setup-country italy
 ```
 
-bei bereits vorhandenem Italien muss abbrechen und darf `/data/italy` nicht überschreiben.
+must abort if Italy is already installed, and must not overwrite `/data/italy`.
 
 ---
 
 # README
 
-Erstelle eine gute, kompakte `README.md`.
+Create a good, compact `README.md`.
 
-Sie soll mindestens enthalten:
+It should contain at least:
 
 ## Installation
 
@@ -501,7 +497,7 @@ git clone ...
 cd GIS-Overpass-Server
 ```
 
-## Land installieren
+## Installing a country
 
 ```bash
 ./bin/setup-country italy
@@ -513,33 +509,33 @@ cd GIS-Overpass-Server
 ./bin/status
 ```
 
-## Stoppen
+## Stopping
 
 ```bash
 ./bin/stop-country italy
 ```
 
-## Starten
+## Starting
 
 ```bash
 ./bin/start-country italy
 ```
 
-## Testen
+## Testing
 
 ```bash
 ./bin/test-country italy
 ```
 
-## Entfernen
+## Removing
 
 ```bash
 ./bin/remove-country italy
 ```
 
-## Overpass Query
+## Overpass query
 
-Beispiel:
+Example:
 
 ```bash
 curl \
@@ -547,52 +543,52 @@ curl \
   http://localhost:18001/api/interpreter
 ```
 
-Außerdem Architektur, Verzeichnisstruktur, Updates und Speicherverbrauch kurz erklären.
+Also briefly explain the architecture, directory structure, updates, and disk usage.
 
 ---
 
-# Implementierungsprinzipien
+# Implementation principles
 
-Prioritäten:
+Priorities:
 
-1. Einfachheit
-2. Robustheit
-3. Wartbarkeit
-4. möglichst wenig SSD-Verbrauch
-5. Länder vollständig voneinander unabhängig
-6. keine unnötigen zusätzlichen Services
-7. keine Kubernetes-/Swarm-Abhängigkeit
+1. Simplicity
+2. Robustness
+3. Maintainability
+4. as little SSD usage as possible
+5. countries fully independent of each other
+6. no unnecessary additional services
+7. no Kubernetes/Swarm dependency
 
-Shell-Scripts bevorzugen, wenn keine andere Sprache einen deutlichen Vorteil bringt.
+Prefer shell scripts, unless another language offers a clear advantage.
 
-Keine unnötig komplexe Framework-Lösung bauen.
+Do not build an unnecessarily complex framework-based solution.
 
 ---
 
-# Wichtig: zuerst recherchieren
+# Important: research first
 
-Bevor du implementierst:
+Before implementing:
 
-1. Prüfe die **aktuelle Dokumentation** von `wiktorn/overpass-api`.
-2. Prüfe die aktuellen Geofabrik Download- und Update-URLs.
-3. Prüfe insbesondere, wie ein `.osm.pbf` mit dem aktuellen Docker-Image korrekt initialisiert wird.
-4. Prüfe, ob die PBF-Konvertierung tatsächlich erforderlich ist oder inzwischen ein direkter Import möglich ist.
-5. Prüfe die korrekte Verwendung von:
+1. Check the **current documentation** of `wiktorn/overpass-api`.
+2. Check the current Geofabrik download and update URLs.
+3. Check in particular how an `.osm.pbf` is correctly initialized with the current Docker image.
+4. Check whether PBF conversion is actually required, or whether a direct import is now possible.
+5. Check the correct use of:
    - `OVERPASS_MODE`
    - `OVERPASS_PLANET_URL`
    - `OVERPASS_DIFF_URL`
    - `OVERPASS_UPDATE_SLEEP`
    - `OVERPASS_META`
    - `/db`
-6. Implementiere anhand der aktuellen Funktionsweise und **nicht anhand veralteter Beispiele**.
+6. Implement based on the current behavior, **not on outdated examples**.
 
-Wenn meine vorgeschlagene technische Umsetzung an einer Stelle nicht zur aktuellen Funktionsweise des Images passt, ändere sie entsprechend und dokumentiere kurz im README, warum.
+If my proposed technical approach doesn't match the image's current behavior at some point, change it accordingly and briefly document why in the README.
 
-## Ergebnis
+## Result
 
-Implementiere das Projekt vollständig im aktuellen Ordner.
+Implement the project completely in the current folder.
 
-Am Ende soll insbesondere dies funktionieren:
+In particular, the following should work in the end:
 
 ```bash
 ./bin/setup-country italy
@@ -609,4 +605,4 @@ Am Ende soll insbesondere dies funktionieren:
 ./bin/remove-country italy
 ```
 
-Italien und Deutschland müssen dabei vollständig unabhängige Overpass-Datenbanken und Update-Streams besitzen.
+Italy and Germany must have fully independent Overpass databases and update streams.

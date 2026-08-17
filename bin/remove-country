@@ -28,6 +28,7 @@ fi
 
 log "Removing overpass-${COUNTRY}..."
 (cd "$ROOT_DIR" && docker compose rm -sf "overpass-${COUNTRY}") || true
+docker volume rm "overpass-${COUNTRY}-db" >/dev/null 2>&1 || true
 
 rm -f "$(instance_env_path "$COUNTRY")"
 render_compose
